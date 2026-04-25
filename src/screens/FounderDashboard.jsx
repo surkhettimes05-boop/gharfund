@@ -101,91 +101,88 @@ export default function FounderDashboard() {
 
   return (
     <section className="app-panel" aria-labelledby="founder-dashboard-title">
-      <p className="eyebrow">Founder</p>
-      <h1 id="founder-dashboard-title">Operational dashboard</h1>
-      <div className="dashboard-grid">
+      <p className="eyebrow">Operations</p>
+      <h1 id="founder-dashboard-title" style={{ fontSize: '1.6rem' }}>Founder dashboard</h1>
+
+      <div className="dashboard-grid" style={{ marginTop: 28 }}>
         <section className="dashboard-card">
-          <p className="dashboard-card-title">Workers</p>
-          <p className="dashboard-card-value">{formatCount(summary?.total_users)}</p>
+          <p className="card-label">Total workers</p>
+          <p className="card-value" style={{ fontSize: '1.6rem', marginTop: 8 }}>{formatCount(summary?.total_users)}</p>
         </section>
         <section className="dashboard-card">
-          <p className="dashboard-card-title">Confirmed transfers</p>
-          <p className="dashboard-card-value">{formatCount(summary?.total_confirmed_transfers)}</p>
+          <p className="card-label">Confirmed transfers</p>
+          <p className="card-value" style={{ fontSize: '1.6rem', marginTop: 8 }}>{formatCount(summary?.total_confirmed_transfers)}</p>
         </section>
         <section className="dashboard-card">
-          <p className="dashboard-card-title">Active goals</p>
-          <p className="dashboard-card-value">{formatCount(summary?.total_active_goals)}</p>
+          <p className="card-label">Active goals</p>
+          <p className="card-value" style={{ fontSize: '1.6rem', marginTop: 8 }}>{formatCount(summary?.total_active_goals)}</p>
         </section>
         <section className="dashboard-card">
-          <p className="dashboard-card-title">Family link opens</p>
-          <p className="dashboard-card-value">{formatCount(summary?.total_family_link_opens)}</p>
+          <p className="card-label">Family link opens</p>
+          <p className="card-value" style={{ fontSize: '1.6rem', marginTop: 8 }}>{formatCount(summary?.total_family_link_opens)}</p>
         </section>
       </div>
 
-      <section className="settings-section">
+      <section className="settings-section" style={{ marginTop: 32 }}>
         <h2 className="settings-section-title">Recent workers</h2>
-        <div className="summary-card">
-          {recentUsers.length ? (
-            <div className="table-scroll">
-              <table className="summary-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Location</th>
-                    <th>Joined</th>
+        {recentUsers.length ? (
+          <div className="table-scroll">
+            <table className="summary-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Location</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentUsers.map((user) => (
+                  <tr key={user.user_id}>
+                    <td style={{ fontWeight: 500, color: 'var(--color-text)' }}>{user.name}</td>
+                    <td>{user.phone}</td>
+                    <td>{user.working_location}</td>
+                    <td>{new Date(user.created_at).toLocaleDateString('en-US')}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentUsers.map((user) => (
-                    <tr key={user.user_id}>
-                      <td>{user.name}</td>
-                      <td>{user.phone}</td>
-                      <td>{user.working_location}</td>
-                      <td>{new Date(user.created_at).toLocaleDateString('en-US')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>No recent workers found.</p>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="form-note">No recent workers found.</p>
+        )}
       </section>
 
-      <section className="settings-section">
+      <section className="settings-section" style={{ marginTop: 24 }}>
         <h2 className="settings-section-title">Recent transfers</h2>
-        <div className="summary-card">
-          {recentTransfers.length ? (
-            <div className="table-scroll">
-              <table className="summary-table">
-                <thead>
-                  <tr>
-                    <th>Worker</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Method</th>
-                    <th>Ack</th>
+        {recentTransfers.length ? (
+          <div className="table-scroll">
+            <table className="summary-table">
+              <thead>
+                <tr>
+                  <th>Worker</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Method</th>
+                  <th>Ack</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTransfers.map((transfer) => (
+                  <tr key={transfer.transfer_id}>
+                    <td style={{ fontWeight: 500, color: 'var(--color-text)' }}>{transfer.worker_name}</td>
+                    <td>{transfer.amount_npr?.toLocaleString('en-US')}</td>
+                    <td>{new Date(transfer.transfer_date).toLocaleDateString('en-US')}</td>
+                    <td>{transfer.method}</td>
+                    <td>{transfer.acknowledged_by_family ? 'Yes' : 'No'}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {recentTransfers.map((transfer) => (
-                    <tr key={transfer.transfer_id}> 
-                      <td>{transfer.worker_name}</td>
-                      <td>{transfer.amount_npr?.toLocaleString('en-US')}</td>
-                      <td>{new Date(transfer.transfer_date).toLocaleDateString('en-US')}</td>
-                      <td>{transfer.method}</td>
-                      <td>{transfer.acknowledged_by_family ? 'Yes' : 'No'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>No recent transfers found.</p>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="form-note">No recent transfers found.</p>
+        )}
       </section>
     </section>
   )

@@ -98,10 +98,10 @@ export default function Streak() {
 
   return (
     <section className="app-panel" aria-labelledby="streak-title">
-      <p className="eyebrow">Streak</p>
-      <h1 id="streak-title">Monthly habit tracking.</h1>
+      <p className="eyebrow">Habit tracking</p>
+      <h1 id="streak-title" style={{ fontSize: '1.6rem' }}>Monthly consistency</h1>
       <p className="lede">
-        Stay consistent each month and build a stronger signal for your family and future borrowing.
+        Stay consistent each month and build trust with your family.
       </p>
 
       <div className="dashboard-grid">

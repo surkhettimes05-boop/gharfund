@@ -190,13 +190,13 @@ export default function Settings() {
   return (
     <section className="app-panel" aria-labelledby="settings-title">
       <p className="eyebrow">Settings</p>
-      <h1 id="settings-title">Profile and app settings.</h1>
+      <h1 id="settings-title" style={{ fontSize: '1.6rem' }}>Profile and preferences</h1>
 
       <form className="settings-form" onSubmit={handleSave}>
         <section className="settings-section">
           <h2 className="settings-section-title">Profile</h2>
           <label className="field-label" htmlFor="settings-name">
-            Name
+            Display name
           </label>
           <input
             id="settings-name"
@@ -207,13 +207,14 @@ export default function Settings() {
           />
 
           <label className="field-label" htmlFor="settings-phone">
-            Phone
+            Phone number
           </label>
           <input
             id="settings-phone"
             className="otp-input text-input"
             value={profile?.phone || ''}
             readOnly
+            style={{ opacity: 0.6, cursor: 'not-allowed' }}
           />
 
           <label className="field-label" htmlFor="settings-location">
@@ -255,10 +256,12 @@ export default function Settings() {
 
         <section className="settings-section">
           <h2 className="settings-section-title">Family link</h2>
-          <div className="summary-card">
-            <p className="summary-line settings-link-text">{familyLink || 'Family link unavailable'}</p>
+          <div className="summary-card" style={{ padding: '14px 16px' }}>
+            <p className="summary-line settings-link-text" style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}>
+              {familyLink || 'Family link unavailable'}
+            </p>
           </div>
-          <div className="stack-actions">
+          <div className="stack-actions" style={{ marginTop: 14 }}>
             <button
               className="primary-button"
               type="button"
@@ -274,14 +277,18 @@ export default function Settings() {
               rel="noreferrer"
               aria-disabled={!familyShareLink}
             >
-              WhatsApp share
+              Share on WhatsApp
             </a>
           </div>
-          {copyStatus ? <p className="form-note">{copyStatus}</p> : null}
+          {copyStatus ? (
+            <p className="form-note" style={{ marginTop: 12, color: 'var(--color-success)' }}>
+              {copyStatus}
+            </p>
+          ) : null}
         </section>
 
         <section className="settings-section">
-          <h2 className="settings-section-title">Monthly reminder</h2>
+          <h2 className="settings-section-title">Notifications</h2>
           <label className="toggle-row" htmlFor="reminder-enabled">
             <span>Monthly transfer reminder</span>
             <input
@@ -295,11 +302,13 @@ export default function Settings() {
 
         <section className="settings-section">
           <h2 className="settings-section-title">About</h2>
-          <div className="summary-card">
-            <p className="summary-line">
-              <strong>SansarPay v1.0</strong>
+          <div className="summary-card" style={{ padding: '14px 16px' }}>
+            <p className="summary-line" style={{ fontWeight: 600, color: 'var(--color-text)' }}>
+              SansarPay v1.0
             </p>
-            <p className="summary-line">Made for Nepali workers</p>
+            <p className="summary-line" style={{ fontSize: '0.85rem' }}>
+              Built for Nepali workers abroad and their families back home.
+            </p>
           </div>
           {feedbackLink ? (
             <a
@@ -316,16 +325,22 @@ export default function Settings() {
           )}
         </section>
 
-        <button className="primary-button" type="submit" disabled={saveStatus === 'saving'}>
-          {saveStatus === 'saving' ? 'Saving...' : 'Save changes'}
-        </button>
-        <button className="text-button" type="button" onClick={handleSignOut}>
-          Sign out
-        </button>
+        <div className="stack-actions" style={{ marginTop: 8 }}>
+          <button className="primary-button" type="submit" disabled={saveStatus === 'saving'}>
+            {saveStatus === 'saving' ? 'Saving...' : 'Save changes'}
+          </button>
+          <button className="text-button" type="button" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
       </form>
 
       {error ? <p className="form-error">{error}</p> : null}
-      {saveStatus === 'saved' ? <p className="form-note">Settings saved.</p> : null}
+      {saveStatus === 'saved' ? (
+        <p className="form-note" style={{ color: 'var(--color-success)', marginTop: 16 }}>
+          Settings saved successfully.
+        </p>
+      ) : null}
     </section>
   )
 }

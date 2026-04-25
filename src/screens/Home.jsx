@@ -98,11 +98,18 @@ export default function Home() {
   return (
     <section className="app-panel" aria-labelledby="home-title">
       <div className="dashboard-header">
-        <div>
-          <p className="eyebrow">SansarPay</p>
-          <h1 id="home-title">Namaste, {profile?.name || session?.name || 'worker'} 🙏</h1>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p className="eyebrow">Dashboard</p>
+          <h1 id="home-title" style={{ fontSize: '1.6rem', lineHeight: 1.2 }}>
+            Namaste, {profile?.name || session?.name || 'worker'}
+          </h1>
         </div>
-        <div className="streak-badge">{streakLabel}</div>
+        <div
+          className="streak-badge"
+          title={streak > 0 ? `${streak} month streak` : 'Start your streak'}
+        >
+          {streakLabel}
+        </div>
       </div>
 
       <div className="dashboard-grid">
@@ -113,25 +120,35 @@ export default function Home() {
         <GoalProgressCard goal={goal} />
       </div>
 
-      <div className="stack-actions">
+      <div className="stack-actions" style={{ marginTop: 28 }}>
         <Link className="primary-link primary-link-block" to="/log-transfer">
-          + Log Transfer
+          Log transfer
         </Link>
         <a
-          className="secondary-link secondary-link-block"
+          className={`secondary-link secondary-link-block${shareLink ? '' : ' secondary-link-disabled'}`}
           href={shareLink || '#'}
           target="_blank"
           rel="noreferrer"
           aria-disabled={!shareLink}
         >
-          Share family view link
+          Share with family
         </a>
       </div>
 
       {!latestTransfer && !goal ? (
-        <p className="form-note">
-          You are all set up. Start by logging your first transfer and your dashboard will begin filling in.
-        </p>
+        <div
+          style={{
+            marginTop: 24,
+            padding: '16px 18px',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--color-bg-subtle)',
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <p className="form-note" style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
+            Welcome to SansarPay. Log your first transfer to start tracking your progress.
+          </p>
+        </div>
       ) : null}
     </section>
   )

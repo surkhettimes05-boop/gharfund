@@ -194,16 +194,36 @@ export default function Auth() {
   return (
     <main className="app-shell">
       <section className="auth-panel" aria-labelledby="auth-title">
-        <p className="eyebrow">SansarPay Login</p>
-        <h1 id="auth-title">Verify your Nepal phone number.</h1>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 'var(--radius-xl)',
+            background: 'var(--color-primary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 0 24px',
+            fontSize: '1.5rem',
+            color: '#ffffff',
+            boxShadow: 'var(--shadow-md)',
+          }}
+          aria-hidden="true"
+        >
+          {'\u2726'}
+        </div>
+        <p className="eyebrow">Secure login</p>
+        <h1 id="auth-title" style={{ fontSize: '1.7rem' }}>
+          Verify your Nepal phone number
+        </h1>
         <p className="lede">
-          Use the number your family knows. We will send a 6-digit OTP.
+          Enter the mobile number your family knows. We will send a secure 6-digit code.
         </p>
 
         {step === 'phone' ? (
           <form className="auth-form" onSubmit={handleSendOtp}>
             <label className="field-label" htmlFor="phone">
-              Nepal mobile number
+              Mobile number
             </label>
             <div className="phone-field">
               <span>+977</span>
@@ -219,13 +239,13 @@ export default function Auth() {
               />
             </div>
             <button className="primary-button" type="submit" disabled={!canSendOtp}>
-              {status === 'sending' ? 'Sending OTP...' : 'Send OTP'}
+              {status === 'sending' ? 'Sending code...' : 'Send secure code'}
             </button>
           </form>
         ) : (
           <form className="auth-form" onSubmit={(event) => event.preventDefault()}>
             <label className="field-label" htmlFor="otp">
-              Enter OTP sent to {normalizedPhone}
+              Code sent to {normalizedPhone}
             </label>
             <input
               id="otp"
@@ -242,7 +262,7 @@ export default function Auth() {
               disabled={!canVerifyOtp}
               onClick={() => verifyOtp(otp)}
             >
-              {status === 'verifying' ? 'Verifying...' : 'Verify OTP'}
+              {status === 'verifying' ? 'Verifying...' : 'Verify'}
             </button>
             <button
               className="text-button"
@@ -253,13 +273,25 @@ export default function Auth() {
                 setError('')
               }}
             >
-              Change phone number
+              Change number
             </button>
           </form>
         )}
 
         {error ? <p className="form-error" role="alert">{error}</p> : null}
         <div id="recaptcha-container" />
+
+        <p
+          className="form-note"
+          style={{
+            marginTop: 28,
+            textAlign: 'center',
+            fontSize: '0.82rem',
+            color: 'var(--color-text-muted)',
+          }}
+        >
+          Secured by Firebase Authentication. Your data is encrypted.
+        </p>
       </section>
     </main>
   )
