@@ -33,6 +33,7 @@ create table if not exists public.users (
   family_token uuid not null default gen_random_uuid(),
   is_founder boolean not null default false,
   reminder_enabled boolean default false,
+  kyc_status text not null default 'unverified',
   created_at timestamptz not null default now(),
   last_active_at timestamptz,
 
@@ -149,6 +150,39 @@ create table if not exists public.family_views (
     check (view_count >= 0)
 );
 
+create table if not exists public.vaults (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  balance integer not null default 0,
+  locked_amount integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint vaults_user_id_unique unique (user_id),
+  constraint vaults_balance_nonnegative_check
+    check (balance >= 0),
+  constraint vaults_locked_amount_nonnegative_check
+    check (locked_amount >= 0)
+);
+
+create table if not exists public.withdrawal_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users(id) on delete cascade,
+  amount_npr integer not null,
+  reason text not null,
+  status text not null default 'pending',
+  approved_by uuid references public.users(id) on delete set null,
+  approved_at timestamptz,
+  created_at timestamptz not null default now(),
+
+  constraint withdrawal_requests_amount_positive_check
+    check (amount_npr > 0),
+  constraint withdrawal_requests_status_check
+    check (status in ('pending', 'approved', 'rejected', 'completed')),
+  constraint withdrawal_requests_approved_at_check
+    check ((status = 'pending' and approved_at is null) or (status != 'pending' and approved_at is not null))
+);
+
 create table if not exists public.notifications_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
@@ -216,6 +250,15 @@ create unique index if not exists family_views_token_idx
 
 create index if not exists notifications_log_user_id_sent_at_idx
   on public.notifications_log(user_id, sent_at desc);
+
+create unique index if not exists vaults_user_id_idx
+  on public.vaults(user_id);
+
+create index if not exists withdrawal_requests_user_id_status_idx
+  on public.withdrawal_requests(user_id, status);
+
+create index if not exists withdrawal_requests_created_at_idx
+  on public.withdrawal_requests(created_at desc);
 
 create or replace function public.is_user_owner(target_user_id uuid)
 returns boolean

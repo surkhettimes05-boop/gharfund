@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ErrorState from '../components/ErrorState.jsx'
 import { getStoredSession } from '../lib/session.js'
 import { createSavingsEntryForTransfer } from '../services/savingsService.js'
 import { recalculateUserStreak } from '../services/streakService.js'
-import { createConfirmedTransfer } from '../services/transferService.js'
+import { createConfirmedTransfer, autoSaveToVault } from '../services/transferService.js'
+import { getKycStatus } from '../services/kycService.js'
 import { trackEvent, trackFeedbackClicked } from '../utils/analytics.js'
 import { formatTransferDate } from '../utils/date.js'
 import { formatNpr, parsePositiveInteger } from '../utils/money.js'
@@ -46,11 +47,28 @@ export default function LogTransfer() {
   const [transferDate, setTransferDate] = useState(getTodayIsoDate())
   const [savedAmount, setSavedAmount] = useState('')
   const [status, setStatus] = useState('idle')
+  const [kycStatus, setKycStatus] = useState('unverified')
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [goalPromptVisible, setGoalPromptVisible] = useState(false)
   const [savedTransfer, setSavedTransfer] = useState(null)
   const [savedStreak, setSavedStreak] = useState(null)
+
+  useEffect(() => {
+    async function checkKyc() {
+      if (!session?.supabaseUserId) return
+      try {
+        const status = await getKycStatus(session.supabaseUserId)
+        setKycStatus(status)
+        if (status !== 'verified') {
+          navigate('/kyc', { replace: true })
+        }
+      } catch (e) {
+        setKycStatus('unverified')
+      }
+    }
+    checkKyc()
+  }, [session?.supabaseUserId, navigate])
 
   const parsedAmount = parsePositiveInteger(amount)
   const parsedSavedAmount = parsePositiveInteger(savedAmount)
@@ -158,6 +176,18 @@ export default function LogTransfer() {
     )
   }
 
+  if (kycStatus !== 'verified') {
+    return (
+      <ErrorState
+        eyebrow="KYC Required"
+        title="KYC not complete."
+        message="You must complete KYC verification before making transfers."
+        linkTo="/kyc"
+        linkLabel="Go to KYC"
+      />
+    )
+  }
+
   async function handleConfirmTransfer() {
     const validationError = validateStepOne()
 
@@ -199,6 +229,9 @@ export default function LogTransfer() {
           last_transfer_month: streak.last_transfer_month,
         },
       })
+
+      // Auto-save 10% to vault
+      await autoSaveToVault(session.supabaseUserId, parsedAmount, 10)
 
       setSavedTransfer(transfer)
       setSavedStreak(streak)

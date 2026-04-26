@@ -102,3 +102,54 @@ export function hasTransferThisMonth(transferDate) {
     transfer.getUTCMonth() === today.getUTCMonth()
   )
 }
+
+export async function createPendingTransfer(userId, transferInput) {
+  const client = getSupabaseRequired()
+  const { data, error } = await client
+    .from('transfers')
+    .insert({
+      user_id: userId,
+      amount_npr: transferInput.amount_npr,
+      transfer_date: transferInput.transfer_date,
+      method: transferInput.method,
+      recipient_type: transferInput.recipient_type,
+      transaction_id: transferInput.transaction_id || null,
+      status: transferInput.status || 'pending',
+      fee: transferInput.fee,
+      fx_rate: transferInput.fx_rate,
+      confirmed: false,
+    })
+    .select('id, amount_npr, transfer_date, method, recipient_type, transaction_id, status, fee, fx_rate, confirmed')
+    .single()
+  if (error) {
+    throw error
+  }
+  return data
+}
+
+export async function updateTransferStatus(transferId, updateFields) {
+  const client = getSupabaseRequired()
+  const { data, error } = await client
+    .from('transfers')
+    .update(updateFields)
+    .eq('id', transferId)
+    .select('id, status, confirmed')
+    .single()
+  if (error) {
+    throw error
+  }
+  return data
+}
+
+// Auto-save to vault: deposits a fixed or percentage amount to user's vault
+export async function autoSaveToVault(userId, transferAmount, percentage = 10) {
+  const { depositToVault } = await import('./vaultService.js')
+  
+  // Calculate auto-save amount (default 10%)
+  const saveAmount = Math.floor((transferAmount * percentage) / 100)
+  
+  if (saveAmount > 0) {
+    return await depositToVault(userId, saveAmount, null)
+  }
+  return null
+}
