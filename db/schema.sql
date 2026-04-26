@@ -32,6 +32,7 @@ create table if not exists public.users (
   language_preference text not null default 'ne',
   family_token uuid not null default gen_random_uuid(),
   is_founder boolean not null default false,
+  kyc_status text not null default 'unverified',
   reminder_enabled boolean default false,
   created_at timestamptz not null default now(),
   last_active_at timestamptz,

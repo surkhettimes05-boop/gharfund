@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { getKycStatus } from '../services/kycService.js'
 import { Link, useNavigate } from 'react-router-dom'
 import ErrorState from '../components/ErrorState.jsx'
 import { getStoredSession } from '../lib/session.js'
@@ -36,10 +37,28 @@ function getMethodLabel(method) {
   return METHOD_OPTIONS.find((option) => option.value === method)?.label || ''
 }
 
+import { useNavigate } from 'react-router-dom'
+
 export default function LogTransfer() {
   const navigate = useNavigate()
   const session = getStoredSession()
   const [step, setStep] = useState(1)
+  const [kycStatus, setKycStatus] = useState('unverified')
+    useEffect(() => {
+      async function checkKyc() {
+        if (!session?.supabaseUserId) return
+        try {
+          const status = await getKycStatus(session.supabaseUserId)
+          setKycStatus(status)
+          if (status !== 'verified') {
+            navigate('/kyc', { replace: true })
+          }
+        } catch (e) {
+          setKycStatus('unverified')
+        }
+      }
+      checkKyc()
+    }, [session?.supabaseUserId])
   const [amount, setAmount] = useState('')
   const [recipient, setRecipient] = useState('')
   const [method, setMethod] = useState('')
@@ -154,6 +173,18 @@ export default function LogTransfer() {
         message="Your session is missing. Login again."
         linkTo="/auth"
         linkLabel="Back to login"
+      />
+    )
+  }
+
+  if (kycStatus !== 'verified') {
+    return (
+      <ErrorState
+        eyebrow="KYC Required"
+        title="KYC not complete."
+        message="You must complete KYC verification before making transfers."
+        linkTo="/kyc"
+        linkLabel="Go to KYC"
       />
     )
   }
