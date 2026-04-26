@@ -1,3 +1,40 @@
+export async function createPendingTransfer(userId, transferInput) {
+  const client = getSupabaseRequired();
+  const { data, error } = await client
+    .from('transfers')
+    .insert({
+      user_id: userId,
+      amount_npr: transferInput.amount_npr,
+      transfer_date: transferInput.transfer_date,
+      method: transferInput.method,
+      recipient_type: transferInput.recipient_type,
+      transaction_id: transferInput.transaction_id || null,
+      status: transferInput.status || 'pending',
+      fee: transferInput.fee,
+      fx_rate: transferInput.fx_rate,
+      confirmed: false,
+    })
+    .select('id, amount_npr, transfer_date, method, recipient_type, transaction_id, status, fee, fx_rate, confirmed')
+    .single();
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+export async function updateTransferStatus(transferId, updateFields) {
+  const client = getSupabaseRequired();
+  const { data, error } = await client
+    .from('transfers')
+    .update(updateFields)
+    .eq('id', transferId)
+    .select('id, status, confirmed')
+    .single();
+  if (error) {
+    throw error;
+  }
+  return data;
+}
 import { supabase } from '../lib/supabase.js'
 
 function getSupabaseRequired() {

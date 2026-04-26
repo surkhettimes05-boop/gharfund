@@ -2,6 +2,16 @@
 
 async function initiateTransfer(params) {
   // Simulate API call
+  if (params.preview) {
+    return {
+      status: 'preview',
+      amount: params.amount,
+      fee: 10,
+      fx_rate: 132.5,
+      provider: 'imepay',
+      mock: true,
+    };
+  }
   return {
     status: 'pending',
     amount: params.amount,
@@ -31,7 +41,7 @@ async function getExchangeRate(params) {
   };
 }
 
-module.exports = {
+export default {
   initiateTransfer,
   checkTransferStatus,
   getExchangeRate,

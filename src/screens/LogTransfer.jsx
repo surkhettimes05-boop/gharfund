@@ -4,7 +4,8 @@ import ErrorState from '../components/ErrorState.jsx'
 import { getStoredSession } from '../lib/session.js'
 import { createSavingsEntryForTransfer } from '../services/savingsService.js'
 import { recalculateUserStreak } from '../services/streakService.js'
-import { createConfirmedTransfer } from '../services/transferService.js'
+import { createConfirmedTransfer, createPendingTransfer, updateTransferStatus } from '../services/transferService.js'
+import paymentService from '../services/payments/paymentService.js'
 import { trackEvent, trackFeedbackClicked } from '../utils/analytics.js'
 import { formatTransferDate } from '../utils/date.js'
 import { formatNpr, parsePositiveInteger } from '../utils/money.js'
@@ -46,6 +47,10 @@ export default function LogTransfer() {
   const [transferDate, setTransferDate] = useState(getTodayIsoDate())
   const [savedAmount, setSavedAmount] = useState('')
   const [status, setStatus] = useState('idle')
+  const [fee, setFee] = useState(null)
+  const [fxRate, setFxRate] = useState(null)
+  const [totalCost, setTotalCost] = useState(null)
+  const [transactionId, setTransactionId] = useState(null)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [goalPromptVisible, setGoalPromptVisible] = useState(false)
@@ -57,7 +62,7 @@ export default function LogTransfer() {
   const isValidAmount = parsedAmount !== null
   const isValidDate = transferDate <= getTodayIsoDate()
   const canContinue = isValidAmount && recipient && method && isValidDate
-  const canConfirmTransfer = canContinue && status !== 'saving-transfer'
+  const canConfirmTransfer = canContinue && status !== 'saving-transfer' && fee !== null && fxRate !== null
   const canSaveSavings = parsedSavedAmount !== null && status !== 'saving-savings'
 
   const formattedAmount = useMemo(
@@ -124,7 +129,7 @@ export default function LogTransfer() {
     navigate('/home', buildHomeState(message, streak))
   }
 
-  function handleContinue(event) {
+  async function handleContinue(event) {
     event.preventDefault()
     const validationError = validateStepOne()
 
@@ -134,16 +139,33 @@ export default function LogTransfer() {
     }
 
     setError('')
-    trackEvent('transfer_logged', {
-      session,
-      properties: {
-        amount_npr: parsedAmount,
-        method,
-        recipient_type: recipient,
-        transfer_date: transferDate,
-      },
-    })
-    setStep(2)
+    setStatus('loading-fee')
+    try {
+      // Get fee and FX rate from paymentService
+      let provider = 'imepay';
+      if (method === 'prabhu_pay') provider = 'prabhupay';
+      paymentService.setProvider(provider);
+      const fx = await paymentService.getExchangeRate({ amount: parsedAmount });
+      setFxRate(fx.fx_rate);
+      // Simulate fee calculation (mock)
+      const feeResp = await paymentService.initiateTransfer({ amount: parsedAmount, preview: true });
+      setFee(feeResp.fee);
+      setTotalCost(parsedAmount + feeResp.fee);
+      setStatus('idle');
+      trackEvent('transfer_logged', {
+        session,
+        properties: {
+          amount_npr: parsedAmount,
+          method,
+          recipient_type: recipient,
+          transfer_date: transferDate,
+        },
+      });
+      setStep(2);
+    } catch (err) {
+      setStatus('idle');
+      setError('Could not fetch fee or FX rate.');
+    }
   }
 
   if (!session?.supabaseUserId) {
@@ -200,50 +222,68 @@ export default function LogTransfer() {
         },
       })
 
-      setSavedTransfer(transfer)
-      setSavedStreak(streak)
-      setStatus('idle')
-      setStep(3)
-      setSuccessMessage(`Transfer saved successfully: ${formatNpr(transfer.amount_npr)}.`)
-    } catch (saveError) {
-      setStatus('idle')
-      setError(saveError.message || 'Could not save the transfer.')
-    }
-  }
+      setStatus('saving-transfer');
+      setError('');
+      setSuccessMessage('');
+      setGoalPromptVisible(false);
 
-  async function handleSaveSavings() {
-    if (!savedTransfer || !savedStreak) {
-      setError('Transfer is missing. Log the transfer again.')
-      return
-    }
+      try {
+        // Initiate real transfer
+        let provider = 'imepay';
+        if (method === 'prabhu_pay') provider = 'prabhupay';
+        paymentService.setProvider(provider);
+        const resp = await paymentService.initiateTransfer({
+          amount: parsedAmount,
+          recipient,
+          method,
+          transferDate,
+        });
+        setTransactionId(resp.transaction_id || null);
+        // Store as pending in DB
+        const transfer = await createPendingTransfer(session.supabaseUserId, {
+          amount_npr: parsedAmount,
+          transfer_date: transferDate,
+          method,
+          recipient_type: recipient,
+          transaction_id: resp.transaction_id || null,
+          status: resp.status || 'pending',
+          fee: resp.fee,
+          fx_rate: resp.fx_rate,
+        });
 
-    if (!parsedSavedAmount) {
-      setError('Enter how much you saved from this transfer.')
-      return
-    }
+        trackEvent('transfer_confirmed', {
+          session,
+          properties: {
+            transfer_id: transfer.id,
+            amount_npr: transfer.amount_npr,
+            method: transfer.method,
+            recipient_type: transfer.recipient_type,
+            transfer_date: transfer.transfer_date,
+          },
+        });
 
-    setStatus('saving-savings')
-    setError('')
-    setGoalPromptVisible(false)
+        // Simulate status update (mock: always success)
+        await updateTransferStatus(transfer.id, { status: 'confirmed', confirmed: true });
+        const streak = await recalculateUserStreak(session.supabaseUserId);
+        trackEvent('streak_updated', {
+          session,
+          properties: {
+            current_streak: streak.current_streak,
+            longest_streak: streak.longest_streak,
+            consistency_score: streak.consistency_score,
+            last_transfer_month: streak.last_transfer_month,
+          },
+        });
 
-    try {
-      const result = await createSavingsEntryForTransfer({
-        userId: session.supabaseUserId,
-        transferId: savedTransfer.id,
-        transferDate,
-        amountSavedNpr: parsedSavedAmount,
-      })
-
-      setStatus('idle')
-
-      if (result.status === 'no_goal') {
-        setGoalPromptVisible(true)
-        setSuccessMessage('Transfer saved successfully. Savings was not tracked because no active goal exists yet.')
-        return
+        setSavedTransfer({ ...transfer, status: 'confirmed' });
+        setSavedStreak(streak);
+        setStatus('idle');
+        setStep(3);
+        setSuccessMessage(`Transfer saved successfully: ${formatNpr(transfer.amount_npr)}.`);
+      } catch (saveError) {
+        setStatus('idle');
+        setError(saveError.message || 'Could not save the transfer.');
       }
-
-      if (result.status === 'duplicate') {
-        navigateHome(
           `Transfer saved successfully: ${formatNpr(savedTransfer.amount_npr)}. Savings was already linked to this transfer.`,
           savedStreak,
         )
@@ -372,6 +412,15 @@ export default function LogTransfer() {
             <p className="summary-line">
               Via <strong>{getMethodLabel(method)}</strong> on <strong>{summaryDate}</strong>
             </p>
+            {fee !== null && (
+              <p className="summary-line">Fee: <strong>{formatNpr(fee)}</strong></p>
+            )}
+            {fxRate !== null && (
+              <p className="summary-line">FX Rate: <strong>{fxRate}</strong></p>
+            )}
+            {totalCost !== null && (
+              <p className="summary-line">Total Cost: <strong>{formatNpr(totalCost)}</strong></p>
+            )}
           </div>
 
           <button
@@ -380,7 +429,7 @@ export default function LogTransfer() {
             disabled={!canConfirmTransfer}
             onClick={handleConfirmTransfer}
           >
-            {status === 'saving-transfer' ? 'Saving transfer...' : 'Yes, completed'}
+            {status === 'saving-transfer' ? 'Saving transfer...' : 'Confirm Transfer'}
           </button>
           <button className="text-button" type="button" onClick={() => setStep(1)}>
             Edit details

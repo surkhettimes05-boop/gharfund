@@ -1,8 +1,9 @@
 // Payment Abstraction Layer
 // Provides a unified interface for payment providers (IME Pay, PrabhuPay)
 
-const imepayProvider = require('./providers/imepayProvider');
-const prabhupayProvider = require('./providers/prabhupayProvider');
+
+import imepayProvider from './providers/imepayProvider.js';
+import prabhupayProvider from './providers/prabhupayProvider.js';
 
 // Set default provider (can be switched easily)
 let currentProvider = imepayProvider;
@@ -14,7 +15,12 @@ function setProvider(providerName) {
 }
 
 async function initiateTransfer(params) {
-  return currentProvider.initiateTransfer(params);
+  // Add a mock transaction_id for real execution
+  const resp = await currentProvider.initiateTransfer(params);
+  if (!resp.transaction_id) {
+    resp.transaction_id = 'mock-' + Math.random().toString(36).substring(2, 12);
+  }
+  return resp;
 }
 
 async function checkTransferStatus(transferId) {
@@ -25,7 +31,7 @@ async function getExchangeRate(params) {
   return currentProvider.getExchangeRate(params);
 }
 
-module.exports = {
+export default {
   setProvider,
   initiateTransfer,
   checkTransferStatus,
