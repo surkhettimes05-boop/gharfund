@@ -33,6 +33,7 @@ create table if not exists public.users (
   family_token uuid not null default gen_random_uuid(),
   is_founder boolean not null default false,
   reminder_enabled boolean default false,
+  sansar_score numeric(5,2) not null default 0,
   created_at timestamptz not null default now(),
   last_active_at timestamptz,
 

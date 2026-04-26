@@ -159,6 +159,15 @@ export async function recalculateUserStreak(userId) {
     throw streakError
   }
 
+  // Update SansarScore after streak update
+  try {
+    const { updateUserSansarScore } = await import('./scoringService.js')
+    await updateUserSansarScore(userId)
+  } catch (e) {
+    // Silently fail if scoring service unavailable
+    console.warn('Could not update SansarScore:', e.message)
+  }
+
   return streakRow
 }
 

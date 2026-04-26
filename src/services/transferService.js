@@ -102,3 +102,25 @@ export function hasTransferThisMonth(transferDate) {
     transfer.getUTCMonth() === today.getUTCMonth()
   )
 }
+
+// Auto-save to vault: deposits a fixed or percentage amount to user's vault
+export async function autoSaveToVault(userId, transferAmount, percentage = 10) {
+  const { depositToVault } = await import('./vaultService.js')
+
+  // Calculate auto-save amount (default 10%)
+  const saveAmount = Math.floor((transferAmount * percentage) / 100)
+
+  if (saveAmount > 0) {
+    const result = await depositToVault(userId, saveAmount, null)
+    // Update SansarScore after vault deposit
+    try {
+      const { updateUserSansarScore } = await import('./scoringService.js')
+      await updateUserSansarScore(userId)
+    } catch (e) {
+      // Silently fail if scoring service unavailable
+      console.warn('Could not update SansarScore:', e.message)
+    }
+    return result
+  }
+  return null
+}
