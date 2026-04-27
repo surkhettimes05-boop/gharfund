@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ErrorState from '../components/ErrorState.jsx'
+import KycStatusBadge from '../components/KycStatusBadge.jsx'
 import { getStoredSession } from '../lib/session.js'
 import { createSavingsEntryForTransfer } from '../services/savingsService.js'
 import { recalculateUserStreak } from '../services/streakService.js'
@@ -9,6 +10,55 @@ import { trackEvent, trackFeedbackClicked } from '../utils/analytics.js'
 import { formatTransferDate } from '../utils/date.js'
 import { formatNpr, parsePositiveInteger } from '../utils/money.js'
 import { buildFounderFeedbackLink, buildTransferLoggedLink } from '../utils/whatsapp.js'
+
+// ---------------------------------------------------------------------------
+// KYC gate — shown instead of the transfer form when kyc_status ≠ verified
+// ---------------------------------------------------------------------------
+const KYC_GATE_COPY = {
+  unverified: {
+    title: 'Verify your identity to send money.',
+    body: 'To comply with regulations, you need to complete a one-time identity check before logging a transfer. It takes about 2 minutes.',
+    cta: 'Start verification',
+  },
+  pending: {
+    title: 'Identity check in progress.',
+    body: 'Your documents are being reviewed. Transfers will be unlocked as soon as your identity is confirmed — usually within 1–2 business days.',
+    cta: 'View KYC status',
+  },
+  rejected: {
+    title: 'Identity check was not approved.',
+    body: 'Your previous submission could not be verified. Please resubmit your documents to unlock transfers.',
+    cta: 'Resubmit documents',
+  },
+}
+
+function KycGate({ kycStatus }) {
+  const copy = KYC_GATE_COPY[kycStatus] ?? KYC_GATE_COPY.unverified
+
+  return (
+    <section className="app-panel" aria-labelledby="kyc-gate-title">
+      <p className="eyebrow">Log Transfer</p>
+      <h1 id="kyc-gate-title" style={{ fontSize: '1.5rem' }}>
+        {copy.title}
+      </h1>
+
+      <div style={{ margin: '16px 0' }}>
+        <KycStatusBadge status={kycStatus} />
+      </div>
+
+      <p className="lede">{copy.body}</p>
+
+      <div className="stack-actions" style={{ marginTop: 28 }}>
+        <Link className="primary-link primary-link-block" to="/kyc">
+          {copy.cta}
+        </Link>
+        <Link className="secondary-link secondary-link-block" to="/home">
+          Back to home
+        </Link>
+      </div>
+    </section>
+  )
+}
 
 const RECIPIENT_OPTIONS = [
   { value: 'wife', label: 'Wife' },
@@ -156,6 +206,11 @@ export default function LogTransfer() {
         linkLabel="Back to login"
       />
     )
+  }
+
+  // KYC gate — block transfer form until identity is verified
+  if (session.kycStatus !== 'verified') {
+    return <KycGate kycStatus={session.kycStatus ?? 'unverified'} />
   }
 
   async function handleConfirmTransfer() {

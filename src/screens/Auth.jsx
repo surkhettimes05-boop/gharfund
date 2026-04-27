@@ -65,7 +65,7 @@ async function upsertSupabaseUser(phoneNumber, firebaseUid) {
       { onConflict: 'phone' },
     )
     .select(
-      'id, firebase_uid, phone, name, working_location, language_preference, family_token, is_founder',
+      'id, firebase_uid, phone, name, working_location, language_preference, family_token, is_founder, kyc_status',
     )
     .single()
 
@@ -160,6 +160,7 @@ export default function Auth() {
         languagePreference: userProfile.language_preference,
         familyToken: userProfile.family_token,
         isFounder: userProfile.is_founder || false,
+        kycStatus: userProfile.kyc_status ?? 'unverified',
         needsOnboarding:
           userProfile.name === 'SansarPay User' || userProfile.working_location === 'Other',
         signedInAt: new Date().toISOString(),
