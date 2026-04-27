@@ -350,8 +350,15 @@ export default function LogTransfer() {
       </p>
 
       {step === 1 ? (
-        <form className="auth-form" onSubmit={handleContinue}>
-          <label className="field-label" htmlFor="transfer-amount">
+        <>
+          <div style={{ marginBottom: 20, padding: 12, background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+            <p style={{ margin: '0 0 10px', fontSize: '0.9rem', fontWeight: 600 }}>Try the new Remittance flow</p>
+            <Link className="primary-link primary-link-block" to="/remit">
+              Go to Remit (V2)
+            </Link>
+          </div>
+          <form className="auth-form" onSubmit={handleContinue}>
+            <label className="field-label" htmlFor="transfer-amount">
             Amount sent (NPR)
           </label>
           <input
@@ -413,6 +420,7 @@ export default function LogTransfer() {
             Continue to confirmation
           </button>
         </form>
+        </>
       ) : null}
 
       {step === 2 ? (

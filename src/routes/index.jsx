@@ -16,6 +16,7 @@ import Transfers from '../screens/Transfers.jsx'
 const Goals = lazy(() => import('../screens/Goals.jsx'))
 const Streak = lazy(() => import('../screens/Streak.jsx'))
 const KYC = lazy(() => import('../screens/KYC.jsx'))
+const Remit = lazy(() => import('../screens/Remit.jsx'))
 const FamilyHome = lazy(() => import('../screens/family/FamilyHome.jsx'))
 const FamilyHistory = lazy(() => import('../screens/family/FamilyHistory.jsx'))
 const FamilyGoal = lazy(() => import('../screens/family/FamilyGoal.jsx'))
@@ -160,6 +161,13 @@ export default function AppRoutes() {
             }
           />
           <Route path="/log-transfer" element={<LogTransfer />} />
+          <Route path="/remit" element={
+            <Suspense fallback={
+              <DashboardRouteFallback eyebrow="Remit" title="Loading..." copy="Preparing remittance simulation" />
+            }>
+              <Remit />
+            </Suspense>
+          } />
           <Route
             path="/kyc"
             element={
