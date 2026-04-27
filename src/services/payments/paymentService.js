@@ -1,33 +1,140 @@
-// Payment Abstraction Layer
-// Provides a unified interface for payment providers (IME Pay, PrabhuPay)
+/**
+ * Payment Service
+ * Unified facade for payment operations across multiple providers
+ * Abstracts provider differences and provides consistent interface
+ */
 
-const imepayProvider = require('./providers/imepayProvider');
-const prabhupayProvider = require('./providers/prabhupayProvider');
+import imePayMockProvider from './providers/imePayMockProvider.js'
+import prabhuPayMockProvider from './providers/prabhuPayMockProvider.js'
+import { PROVIDERS } from './paymentTypes.js'
+import { ProviderConfigError } from './paymentErrors.js'
 
-// Set default provider (can be switched easily)
-let currentProvider = imepayProvider;
-
-function setProvider(providerName) {
-  if (providerName === 'imepay') currentProvider = imepayProvider;
-  else if (providerName === 'prabhupay') currentProvider = prabhupayProvider;
-  else throw new Error('Unknown provider');
+/**
+ * Available providers
+ */
+const providers = {
+  [PROVIDERS.IME_PAY]: imePayMockProvider,
+  [PROVIDERS.PRABHU_PAY]: prabhuPayMockProvider,
 }
 
-async function initiateTransfer(params) {
-  return currentProvider.initiateTransfer(params);
+/**
+ * Current active provider
+ */
+let activeProvider = PROVIDERS.IME_PAY
+
+/**
+ * Set the active payment provider
+ * @param {string} providerName - Provider to activate (ime_pay or prabhu_pay)
+ * @throws {ProviderConfigError} If provider not found
+ */
+export function setProvider(providerName) {
+  if (!providers[providerName]) {
+    throw new ProviderConfigError(
+      providerName,
+      `Available providers: ${Object.keys(providers).join(', ')}`,
+    )
+  }
+  activeProvider = providerName
+  console.log(`[Payment Service] Provider switched to: ${providerName}`)
 }
 
-async function checkTransferStatus(transferId) {
-  return currentProvider.checkTransferStatus(transferId);
+/**
+ * Get the current active provider
+ * @returns {string} Current provider name
+ */
+export function getActiveProvider() {
+  return activeProvider
 }
 
-async function getExchangeRate(params) {
-  return currentProvider.getExchangeRate(params);
+/**
+ * Get provider configuration
+ * @param {string} providerName - Optional provider name (uses active if not specified)
+ * @returns {Object} Provider configuration
+ */
+export function getProviderConfig(providerName = activeProvider) {
+  const provider = providers[providerName]
+  if (!provider) {
+    throw new ProviderConfigError(providerName, 'Provider not found')
+  }
+  return provider.config
 }
 
-module.exports = {
+/**
+ * Get a remittance quote from the active provider
+ * @param {Object} quoteRequest - { amount_npr, destination_country, delivery_method }
+ * @returns {Promise<Object>} Quote with locked rates
+ */
+export async function getQuote(quoteRequest) {
+  const provider = providers[activeProvider]
+  if (!provider) {
+    throw new ProviderConfigError(activeProvider, 'Provider not found')
+  }
+  return provider.getQuote(quoteRequest)
+}
+
+/**
+ * Lock a quote with the active provider
+ * @param {string} quoteId - Quote ID to lock
+ * @returns {Promise<Object>} Locked quote
+ */
+export async function lockQuote(quoteId) {
+  const provider = providers[activeProvider]
+  if (!provider) {
+    throw new ProviderConfigError(activeProvider, 'Provider not found')
+  }
+  return provider.lockQuote(quoteId)
+}
+
+/**
+ * Initiate a transfer with the active provider
+ * @param {Object} transferRequest - { quote_id, recipient_name, recipient_phone, recipient_account }
+ * @returns {Promise<Object>} Transaction with provider reference
+ */
+export async function initiateTransfer(transferRequest) {
+  const provider = providers[activeProvider]
+  if (!provider) {
+    throw new ProviderConfigError(activeProvider, 'Provider not found')
+  }
+  return provider.initiateTransfer(transferRequest)
+}
+
+/**
+ * Check transfer status with the active provider
+ * @param {string} transactionId - Transaction ID to check
+ * @returns {Promise<Object>} Current transaction status
+ */
+export async function checkStatus(transactionId) {
+  const provider = providers[activeProvider]
+  if (!provider) {
+    throw new ProviderConfigError(activeProvider, 'Provider not found')
+  }
+  return provider.checkStatus(transactionId)
+}
+
+/**
+ * Get all available providers and their configurations
+ * @returns {Array<Object>} List of providers with configs
+ */
+export function getAvailableProviders() {
+  return Object.entries(providers).map(([name, provider]) => ({
+    name,
+    provider: provider.provider,
+    config: provider.config,
+  }))
+}
+
+/**
+ * Payment service export
+ */
+export const paymentService = {
   setProvider,
+  getActiveProvider,
+  getProviderConfig,
+  getQuote,
+  lockQuote,
   initiateTransfer,
-  checkTransferStatus,
-  getExchangeRate,
-};
+  checkStatus,
+  getAvailableProviders,
+}
+
+export default paymentService
