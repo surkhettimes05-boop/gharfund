@@ -7,6 +7,26 @@ import {
   signInWithPhoneNumber,
 } from 'firebase/auth'
 
+// ---------------------------------------------------------------------------
+// Build the Firebase config from VITE_FIREBASE_* environment variables.
+// All six variables must be present; Vite only forwards VITE_-prefixed vars.
+// ---------------------------------------------------------------------------
+const REQUIRED_FIREBASE_VARS = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID',
+]
+
+/** Returns an array of env-var names that are missing or empty. */
+function getMissingFirebaseVars() {
+  return REQUIRED_FIREBASE_VARS.filter(
+    (name) => !import.meta.env[name],
+  )
+}
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,11 +36,29 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const firebaseApp = firebaseConfig.apiKey
+/** True only when every required Firebase env variable is present. */
+export const isFirebaseConfigured = getMissingFirebaseVars().length === 0
+
+export const firebaseApp = isFirebaseConfigured
   ? initializeApp(firebaseConfig)
   : null
 
 export const firebaseAuth = firebaseApp ? getAuth(firebaseApp) : null
+
+// Dev-time diagnostic: list missing variable names (never their values).
+if (!isFirebaseConfigured) {
+  const missing = getMissingFirebaseVars()
+  // eslint-disable-next-line no-console
+  console.error(
+    '[gharfund] Firebase is NOT configured.\n' +
+      'The following VITE_FIREBASE_* environment variables are missing or empty:\n' +
+      missing.map((v) => `  • ${v}`).join('\n') +
+      '\n\nVercel fix:\n' +
+      '  Dashboard → Your Project → Settings → Environment Variables\n' +
+      '  Add each missing variable → select Production + Preview + Development → Save\n' +
+      '  Then trigger a new deployment (Deployments → Redeploy).',
+  )
+}
 
 export function normalizeNepalPhone(localNumber) {
   const digits = localNumber.replace(/\D/g, '')
@@ -38,7 +76,12 @@ export function isValidNepalPhone(localNumber) {
 
 export function getFirebaseAuthRequired() {
   if (!firebaseAuth) {
-    throw new Error('Firebase is not configured. Check VITE_FIREBASE_* values.')
+    const missing = getMissingFirebaseVars()
+    const detail =
+      missing.length > 0
+        ? `Missing variables: ${missing.join(', ')}`
+        : 'All variables are present but Firebase failed to initialise.'
+    throw new Error(`Firebase is not configured. ${detail}`)
   }
 
   return firebaseAuth
