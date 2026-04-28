@@ -22,6 +22,7 @@ const Vault = lazy(() => import('../screens/Vault.jsx'))
 const Referrals = lazy(() => import('../screens/Referrals.jsx'))
 const AutoSaveSettings = lazy(() => import('../screens/AutoSaveSettings.jsx'))
 const AffiliateDashboard = lazy(() => import('../screens/AffiliateDashboard.jsx'))
+const AdminWithdrawals = lazy(() => import('../screens/AdminWithdrawals.jsx'))
 const FamilyHome = lazy(() => import('../screens/family/FamilyHome.jsx'))
 const FamilyHistory = lazy(() => import('../screens/family/FamilyHistory.jsx'))
 const FamilyGoal = lazy(() => import('../screens/family/FamilyGoal.jsx'))
@@ -266,6 +267,22 @@ export default function AppRoutes() {
                 }
               >
                 <AutoSaveSettings />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/admin/withdrawals"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Admin"
+                    title="Loading..."
+                    copy="Preparing withdrawal approval dashboard."
+                  />
+                }
+              >
+                <AdminWithdrawals />
               </Suspense>
             }
           />
