@@ -15,6 +15,10 @@ import Transfers from '../screens/Transfers.jsx'
 
 const Goals = lazy(() => import('../screens/Goals.jsx'))
 const Streak = lazy(() => import('../screens/Streak.jsx'))
+const KYC = lazy(() => import('../screens/KYC.jsx'))
+const Remit = lazy(() => import('../screens/Remit.jsx'))
+const Vault = lazy(() => import('../screens/Vault.jsx'))
+const Referrals = lazy(() => import('../screens/Referrals.jsx'))
 const FamilyHome = lazy(() => import('../screens/family/FamilyHome.jsx'))
 const FamilyHistory = lazy(() => import('../screens/family/FamilyHistory.jsx'))
 const FamilyGoal = lazy(() => import('../screens/family/FamilyGoal.jsx'))
@@ -159,6 +163,61 @@ export default function AppRoutes() {
             }
           />
           <Route path="/log-transfer" element={<LogTransfer />} />
+          <Route path="/remit" element={
+            <Suspense fallback={
+              <DashboardRouteFallback eyebrow="Remit" title="Loading..." copy="Preparing remittance simulation" />
+            }>
+              <Remit />
+            </Suspense>
+          } />
+          <Route
+            path="/kyc"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Identity Verification"
+                    title="Loading KYC status…"
+                    copy="Checking your verification status."
+                  />
+                }
+              >
+                <KYC />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/vault"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Vault"
+                    title="Loading vault..."
+                    copy="Preparing your savings account."
+                  />
+                }
+              >
+                <Vault />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/referrals"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Referrals"
+                    title="Loading referrals..."
+                    copy="Preparing your referral program."
+                  />
+                }
+              >
+                <Referrals />
+              </Suspense>
+            }
+          />
         </Route>
         <Route
           path="/family/:token"
