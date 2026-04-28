@@ -20,6 +20,7 @@ const KYC = lazy(() => import('../screens/KYC.jsx'))
 const Remit = lazy(() => import('../screens/Remit.jsx'))
 const Vault = lazy(() => import('../screens/Vault.jsx'))
 const Referrals = lazy(() => import('../screens/Referrals.jsx'))
+const AutoSaveSettings = lazy(() => import('../screens/AutoSaveSettings.jsx'))
 const AffiliateDashboard = lazy(() => import('../screens/AffiliateDashboard.jsx'))
 const FamilyHome = lazy(() => import('../screens/family/FamilyHome.jsx'))
 const FamilyHistory = lazy(() => import('../screens/family/FamilyHistory.jsx'))
@@ -249,6 +250,22 @@ export default function AppRoutes() {
                 }
               >
                 <AffiliateDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/auto-save"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Auto-Save"
+                    title="Loading settings..."
+                    copy="Preparing auto-save configuration."
+                  />
+                }
+              >
+                <AutoSaveSettings />
               </Suspense>
             }
           />

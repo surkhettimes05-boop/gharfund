@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase.js'
 import { checkStatus } from './payments/paymentService.js'
+import { processAutoSave } from './autoSaveService.js'
 
 function getSupabaseRequired() {
   if (!supabase) {
@@ -94,6 +95,13 @@ export async function initiateRemittanceTransfer(userId, quoteId, recipientAccou
 
     // Update quote status
     await client.from('remittance_quotes').update({ status: 'used' }).eq('id', quoteId)
+
+    // Process auto-save if enabled (non-blocking)
+    try {
+      await processAutoSave(userId, quote.amount_npr)
+    } catch (err) {
+      console.warn('Auto-save failed (non-blocking):', err)
+    }
 
     return transaction
   } catch (error) {
