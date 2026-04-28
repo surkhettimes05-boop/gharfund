@@ -15,10 +15,12 @@ import Transfers from '../screens/Transfers.jsx'
 
 const Goals = lazy(() => import('../screens/Goals.jsx'))
 const Streak = lazy(() => import('../screens/Streak.jsx'))
+const Score = lazy(() => import('../screens/Score.jsx'))
 const KYC = lazy(() => import('../screens/KYC.jsx'))
 const Remit = lazy(() => import('../screens/Remit.jsx'))
 const Vault = lazy(() => import('../screens/Vault.jsx'))
 const Referrals = lazy(() => import('../screens/Referrals.jsx'))
+const AffiliateDashboard = lazy(() => import('../screens/AffiliateDashboard.jsx'))
 const FamilyHome = lazy(() => import('../screens/family/FamilyHome.jsx'))
 const FamilyHistory = lazy(() => import('../screens/family/FamilyHistory.jsx'))
 const FamilyGoal = lazy(() => import('../screens/family/FamilyGoal.jsx'))
@@ -163,6 +165,22 @@ export default function AppRoutes() {
             }
           />
           <Route path="/log-transfer" element={<LogTransfer />} />
+          <Route
+            path="/score"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Score"
+                    title="Loading score..."
+                    copy="Calculating your Sansar Score."
+                  />
+                }
+              >
+                <Score />
+              </Suspense>
+            }
+          />
           <Route path="/remit" element={
             <Suspense fallback={
               <DashboardRouteFallback eyebrow="Remit" title="Loading..." copy="Preparing remittance simulation" />
@@ -215,6 +233,22 @@ export default function AppRoutes() {
                 }
               >
                 <Referrals />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/affiliate"
+            element={
+              <Suspense
+                fallback={
+                  <DashboardRouteFallback
+                    eyebrow="Affiliate Dashboard"
+                    title="Loading dashboard..."
+                    copy="Preparing your partner analytics."
+                  />
+                }
+              >
+                <AffiliateDashboard />
               </Suspense>
             }
           />

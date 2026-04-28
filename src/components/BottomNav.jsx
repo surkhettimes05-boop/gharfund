@@ -6,6 +6,7 @@ const BASE_NAV_ITEMS = [
   { to: '/home', label: 'Home', icon: '\u2302' },
   { to: '/transfers', label: 'Transfers', icon: '\u21C6' },
   { to: '/goals', label: 'Goals', icon: '\u2606' },
+  { to: '/score', label: 'Score', icon: '\u2B50' },
   { to: '/settings', label: 'Settings', icon: '\u2699' },
 ]
 
