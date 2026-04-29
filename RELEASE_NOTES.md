@@ -1,6 +1,147 @@
-# SansarPay MVP Release Notes
+# SansarPay Release Notes
 
-Release date: 2026-04-25
+## v2.0 Production Release
+
+**Release Date:** 2026-04-29  
+**Status:** LIVE on Vercel  
+**Merge:** `develop` → `main` (commit: 4877981)
+
+### Release Summary
+
+SansarPay v2 is a **major expansion** of the MVP with advanced remittance flows, credit scoring, affiliate referrals, admin approvals, and enhanced payment processing.
+
+### Build Status
+
+```bash
+npm run build
+```
+
+Result: **PASS** ✓  
+Output: `dist/` generated with code-split routes and optimized gzip compression.
+
+### Branches Shipped
+
+- `develop` (integration branch) merged into `main` (production)
+- `feature/remittance-transactions` merged into `develop`
+
+### Commits in Release
+
+- 7bdbdeb: feat: Add notification service and update routes for remittance transactions
+- ac3b9f3: feat: add admin withdrawal approval dashboard with approval workflow
+- 7b1fb15: feat: add auto-save integration with remittance transfers
+- eb0fa63: feat: add score display and affiliate dashboard with analytics
+- aad350d: feat: add remittance transactions, vault, withdrawal, and referral systems with UI screens
+- 0478aab: feat(payment): add payment abstraction layer with IME Pay and PrabhuPay mock providers
+
+### Shipped in v2
+
+#### Remittance Transactions
+
+- `/log-transfer` upgraded with real payment flow
+- Transfer preview with fee and FX calculations
+- Payment method selection (IME Pay, PrabhuPay mock providers)
+- Pending transfer status tracking
+- Confirmed transfer history
+
+#### Vault System
+
+- `/vault` savings vault for micro-deposits
+- Deposit requests with approval workflow
+- Withdrawal requests and approval
+- Vault balance tracking
+- Vault history view
+
+#### Credit Scoring
+
+- `/score` SansarScore engine
+- Rule-based scoring from transfer history
+- Credit tier display
+- Score breakdown and drivers
+- Dynamic score updates
+
+#### Affiliate Referral System
+
+- `/referrals` affiliate dashboard
+- Referral link generation and tracking
+- Referral performance metrics
+- Referral rewards and commissions tracking
+
+#### Admin Withdrawals
+
+- `/admin-withdrawals` withdrawal approval workflow
+- Batch withdrawal processing
+- Admin approval actions
+- Withdrawal status tracking
+
+#### Auto-Save Integration
+
+- `/settings/auto-save` auto-save configuration
+- Percentage-based auto-save on transfers
+- Auto-save deposit automation
+- Auto-save analytics
+
+#### Enhanced Notifications
+
+- Notification service for all system events
+- Transfer completion notifications
+- Withdrawal approvals/rejections
+- Referral and reward notifications
+- KYC status updates
+- Goal milestone notifications
+
+#### Payment Abstraction Layer
+
+- `paymentService.js` unified payment interface
+- IME Pay provider mock
+- PrabhuPay provider mock
+- Extensible provider architecture for real payment processing
+
+#### Component Improvements
+
+- `src/components/index.js` barrel exports for cleaner imports
+
+---
+
+## v1.0 MVP Release (2026-04-25)
+
+### Shipped Features
+
+#### Worker auth and onboarding
+
+- Nepal phone OTP login with Firebase Auth
+- Onboarding flow for first name and working location
+- Guarded worker routes using stored session state
+
+#### Worker dashboard and money tracking
+
+- Home dashboard with transfer summary
+- Transfer logging with confirmation step
+- Transfer history screen
+- Streak tracking screen
+- Savings goal creation
+- Savings goal detail and progress
+
+#### Family sharing
+
+- Public family routes:
+  - `/family/:token`
+  - `/family/:token/history`
+  - `/family/:token/goal`
+- Family acknowledgment of latest transfer
+- WhatsApp share links for family access
+
+#### Founder feedback and messaging
+
+- Founder feedback link in Settings
+- Founder dashboard at `/founder`
+- Feedback CTAs throughout user flows
+- WhatsApp prefilled founder feedback message
+
+#### Analytics and PWA
+
+- Optional PostHog analytics
+- PWA manifest and service worker
+- Social preview image and favicon
 
 ## Release Summary
 
@@ -191,48 +332,61 @@ npm run firebase:set-role -- --service-account="C:\path\service-account.json" --
 5. Confirm events appear in PostHog.
 6. Confirm analytics failures do not block product flows.
 
-## Testing Checklist
+---
 
-Engineering checks:
+## Vercel Production Deployment Checklist
 
-- `npm run lint`
-- `npm run build`
+After pushing `main` to GitHub:
 
-Manual checks:
+1. **Vercel Auto-Deploy**
+   - Check Vercel dashboard for new deployment
+   - Monitor build logs for success
+   - Expected duration: 2-3 minutes
 
-- signup
-- OTP
-- onboarding
-- home dashboard
-- log transfer
-- savings entry
-- transfer history
-- create goal
-- goal detail
-- streak
-- settings
-- feedback CTA
-- family link
-- family acknowledgment
-- WhatsApp links
-- offline banner
-- mobile layout
+2. **Environment Variables**
+   - Set all `VITE_*` variables in Vercel project settings
+   - Trigger new deployment after env updates
+   - Verify deployment completes successfully
 
-Use:
+3. **Post-Deployment Validation**
+   - Visit `/auth` → verify phone input loads
+   - Visit `/home` → verify auth guard redirects
+   - Sign up with test phone number
+   - Log a transfer
+   - Create a savings goal
+   - View settings and family link
+   - Check browser console for errors
+   - Verify all routes load without 404s
 
-- [QA_CHECKLIST.md](./QA_CHECKLIST.md)
-- [DEBUG_LOOP.md](./DEBUG_LOOP.md)
+4. **Deployment URLs to Test**
+   - `/auth` - Authentication screen
+   - `/home` - Worker dashboard
+   - `/transfers` - Transfer history
+   - `/log-transfer` - Log new transfer
+   - `/goals` - Savings goals
+   - `/settings` - User settings
+   - `/vault` - Vault (if enabled)
+   - `/score` - Credit score (if enabled)
+   - `/referrals` - Referral dashboard (if enabled)
+   - `/family/test-token` - (Test with valid token if available)
 
-## Release Recommendation
+---
 
-Current status:
+## Rollback Plan
 
-- build-ready
-- documentation-ready
-- not yet safe for public beta
+If production deployment fails:
 
-Ship beta only after:
+1. Identify last stable commit on `main`:
+   ```bash
+   git log --oneline main | head -10
+   ```
 
-1. `VITE_APP_BASE_URL` points to the final HTTPS domain
-2. family token lookup is verified end to end
-3. real-device OTP and WhatsApp checks pass
+2. Revert the merge commit:
+   ```bash
+   git revert -m 1 4877981  # Revert v2 merge commit
+   git push origin main
+   ```
+
+3. Vercel will auto-deploy the reverted version (approximately 3 minutes)
+
+4. **Previous stable main commit:** `08a334d` (v1.0.0 tag)
