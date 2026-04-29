@@ -16,8 +16,6 @@ import Transfers from '../screens/Transfers.jsx'
 const Goals = lazy(() => import('../screens/Goals.jsx'))
 const Streak = lazy(() => import('../screens/Streak.jsx'))
 const Score = lazy(() => import('../screens/Score.jsx'))
-const KYC = lazy(() => import('../screens/KYC.jsx'))
-const Remit = lazy(() => import('../screens/Remit.jsx'))
 const Vault = lazy(() => import('../screens/Vault.jsx'))
 const Referrals = lazy(() => import('../screens/Referrals.jsx'))
 const AutoSaveSettings = lazy(() => import('../screens/AutoSaveSettings.jsx'))
@@ -180,29 +178,6 @@ export default function AppRoutes() {
                 }
               >
                 <Score />
-              </Suspense>
-            }
-          />
-          <Route path="/remit" element={
-            <Suspense fallback={
-              <DashboardRouteFallback eyebrow="Remit" title="Loading..." copy="Preparing remittance simulation" />
-            }>
-              <Remit />
-            </Suspense>
-          } />
-          <Route
-            path="/kyc"
-            element={
-              <Suspense
-                fallback={
-                  <DashboardRouteFallback
-                    eyebrow="Identity Verification"
-                    title="Loading KYC status…"
-                    copy="Checking your verification status."
-                  />
-                }
-              >
-                <KYC />
               </Suspense>
             }
           />
