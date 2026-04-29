@@ -7,16 +7,33 @@ import {
   signInWithPhoneNumber,
 } from 'firebase/auth'
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+const firebaseEnvEntries = [
+  ['apiKey', 'VITE_FIREBASE_API_KEY'],
+  ['authDomain', 'VITE_FIREBASE_AUTH_DOMAIN'],
+  ['projectId', 'VITE_FIREBASE_PROJECT_ID'],
+  ['appId', 'VITE_FIREBASE_APP_ID'],
+  ['messagingSenderId', 'VITE_FIREBASE_MESSAGING_SENDER_ID'],
+  ['storageBucket', 'VITE_FIREBASE_STORAGE_BUCKET'],
+]
+
+const firebaseConfig = Object.fromEntries(
+  firebaseEnvEntries.map(([configKey, envName]) => [
+    configKey,
+    import.meta.env[envName]?.trim() || '',
+  ]),
+)
+
+const missingFirebaseEnvNames = firebaseEnvEntries
+  .filter(([configKey]) => !firebaseConfig[configKey])
+  .map(([, envName]) => envName)
+
+if (import.meta.env.DEV && missingFirebaseEnvNames.length > 0) {
+  console.warn(
+    `Missing Firebase config in development: ${missingFirebaseEnvNames.join(', ')}`,
+  )
 }
 
-export const firebaseApp = firebaseConfig.apiKey
+export const firebaseApp = missingFirebaseEnvNames.length === 0
   ? initializeApp(firebaseConfig)
   : null
 
@@ -38,7 +55,9 @@ export function isValidNepalPhone(localNumber) {
 
 export function getFirebaseAuthRequired() {
   if (!firebaseAuth) {
-    throw new Error('Firebase is not configured. Check VITE_FIREBASE_* values.')
+    throw new Error(
+      `Missing Firebase config: ${missingFirebaseEnvNames.join(', ') || 'unknown'}`,
+    )
   }
 
   return firebaseAuth

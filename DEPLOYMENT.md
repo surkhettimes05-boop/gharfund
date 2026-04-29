@@ -26,9 +26,9 @@ VITE_SUPABASE_ANON_KEY=
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
 VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
 VITE_APP_BASE_URL=
 VITE_FOUNDER_WHATSAPP=
 VITE_POSTHOG_KEY=
@@ -77,6 +77,22 @@ This repo is configured to:
 The `-s` flag enables SPA fallback routing to `index.html`, which is required for this React Router app.
 
 Set the required `VITE_*` variables in Railway service settings before deploying.
+
+## Fix Firebase on Vercel
+
+1. Open Vercel.
+2. Select the `gharfund` project.
+3. Go to `Settings` -> `Environment Variables`.
+4. Add all `VITE_FIREBASE_*` values:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_APP_ID`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+5. Apply each variable to `Production`, `Preview`, and `Development`.
+6. Redeploy the latest production deployment.
+7. Hard refresh the browser.
 
 ## Service Worker and Auth Safety
 
