@@ -6,6 +6,8 @@ export function formatNpr(amount) {
   }).format(amount || 0)
 }
 
+export const formatCurrency = formatNpr
+
 export function getGoalEmoji(goalType) {
   switch (goalType) {
     case 'house':
